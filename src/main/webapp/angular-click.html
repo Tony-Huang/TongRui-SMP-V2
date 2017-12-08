@@ -1,0 +1,135 @@
+<html ng-app="notesApp">
+<head><title>Notes App</title></head>
+
+<body ng-controller="MainCtrl as ctrl">
+
+   <div>
+      {{ctrl.message}} AngularJS-submit data -v1
+       <div>
+       -1. agnularJS may have strange problem
+       when submit (POST) data to backend servlet when Content-Type being application/x-www-form-urlencoded.
+       </div>
+       <div>
+       For example, if form data is json format like {"id" :"1","name":"k"} then Java servlet side will receive parameter as
+       {"id":"1","name":"k"}=[] (key is json format,value is empty)
+       </div>
+       <div>
+       This means we need some change (use a requestTransform maybe) when submitting data since angularJS
+       natively support Content-Type being application/json(This means the data submitted as body not as parameter)
+       </div>
+       <h3> <hr/></h3>
+
+       2. But when angularJS submit data to camel restlet consumer ednpoint, it works fine.
+        Even the content-type being application/x-www-form-urlencoded, the post data will be sent as
+       body , not appear in CamelHttpQuery,neither in backend server parameters , but in camel in.body.
+       The appended queryString from FE can still be in camel camelHttpQuery amd backend servlet request.getQuery
+       (same result as request.getParameters()).
+
+       <h3>  <hr/> </h3>
+       3. When angularJS submit data to Backend servlet or Camel Restlet then it works fine when content-type being
+       application/json. That is, for GET method, the http query String will be as parameter for servelt or headers for
+       restlet and submitted json data being as body in servlet or restlet;for POST or other non-GET method, submitted json data being as body
+       in servlet ot restlet.
+
+   </div>
+
+
+   <br/><br/>
+
+   <ng-form name="profile">
+      url: <input type="text"
+              name="url"
+              ng-model="ctrl.profile.url"
+              placeholder="http://localhost:7888/be/myservice"
+              value="http://localhost:7888/be/myservice?a=1&b=2&name=Tony%20Huang"
+              size="50"
+              required>
+       <br/>example restlet url: http://localhost:7888/services/callBE?a=1&b=2&name=Tony%20Huang&desc=%E4%B8%AD%E5%9B%BD&timeDelay=1000
+       <br/>example servlet url: http://localhost:7888/be/myservice?a=1&b=2&name=Tony%20Huang
+
+
+    <br/> <br/>
+     <div ng-init="Method = 'GET'">
+         method: <select ng-model="ctrl.profile.method">
+                   <option value="GET">GET</option>
+                   <option value="POST">POST</option>
+                   <option value="PUT">PUT</option>
+                   <option value="DELETE">DELETE</option>
+                 </select>
+       </div>
+
+       <div ng-init="Content-Type = 'application/json'">
+           Content-Type: <select ng-model="ctrl.profile.contentType">
+                           <option value="application/json">application/json</option>
+                           <option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
+                         </select>
+       </div>
+
+       <br/> <br/>
+
+
+       <div>  data to submit:</div>
+
+       <input type="text"
+              name="id"
+              ng-model="ctrl.data.id"
+              placeholder="1">
+       <input type="text"
+              name="name"
+              ng-model="ctrl.data.name"
+              placeholder="Kim">
+       <input type="text"
+              name="status"
+              ng-model="ctrl.data.status"
+              placeholder="Best Friend">
+
+       <div>
+
+
+
+       </div>
+
+   </ng-form>
+
+   <div>------------</div>
+
+   <div>
+      <button ng-click="ctrl.changeMessage()">
+        submit data
+      </button>
+   </div>
+
+<script src="angular-1.5.8/angular.js" >
+</script>
+
+<script type="text/javascript">
+  angular.module('notesApp', [])
+    .controller('MainCtrl',['$http',function($http) {
+      var self = this;
+      self.message= 'Hello ';
+
+      self.changeMessage = function() {
+        self.message = 'Goodbye';
+        console.log(self.profile);
+
+         //to call another backend service
+         console.log("...call backend service...");
+         var request = $http( {
+                   method: self.profile.method,
+                   url:  self.profile.url,
+                   headers: {"Content-Type": self.profile.contentType},
+                   data: self.data
+                         }
+                      );
+
+
+         request.then ( function (res) {
+                   console.log(res.data);
+                 })
+                 .then(function(err) {
+                   console.log(err);
+                    })
+    }
+    }])
+
+    </script>

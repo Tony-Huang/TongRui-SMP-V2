@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/spring"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+
+       http://camel.apache.org/schema/spring
+       http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+
+    <bean id="RestletComponent" class="org.restlet.Component"/>
+    <bean id="RestletComponentService" class="org.apache.camel.component.restlet.RestletComponent">
+        <constructor-arg ref="RestletComponent" />
+    </bean>
+
+    <import resource="note-service.xml"/>
+    <import resource="note-service*.xml"/>
+    <import resource="common-service.xml"/>
+    <import resource="camel-*.xml" />
+
+
+</beans>

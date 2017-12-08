@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/spring"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+
+    <bean id="myProcessor" class="com.hdp.camel.processor.MyProcess" > </bean>
+
+    <!--This works fine, need to start note server (\AngularJS-up-and-running-master\chapter6 , node server.js)-->
+    <camelContext id="com.backbase.portal.integration.service.note"  xmlns="http://camel.apache.org/schema/spring">
+
+        <route id="alljson.list.nas">
+            <from uri="restlet:/i18n/nas/alljson?restletMethods=GET"/>
+            <recipientList>
+                <simple>language:constant:resource:file:///C:/tmp/hsbc-logout/all.json?contentCache=false
+                </simple>
+            </recipientList>
+            <convertBodyTo type="String"/>
+        </route>
+
+        <route id="myservice.callBackend">
+            <from uri="restlet:/callBE?restletMethods=GET,POST"/>
+
+            <convertBodyTo type="String"/>
+
+            <removeHeaders pattern="org.restlet*"/>
+            <removeHeaders pattern="CamelRestlet*"/>
+            <removeHeaders pattern="breadcrumb*"/>
+            <log message="******Start of route. headers : ${in.headers} ; ------body :${in.body}" loggingLevel="INFO" />
+
+            <setHeader headerName="Content-Type">
+                <constant>application/json</constant>
+            </setHeader>
+            <!--<setHeader headerName="CamelHttpQuery">-->
+                <!--<constant>v1=1&amp;v2=2&amp;v3=3&amp;timeDelay=100</constant>-->
+            <!--</setHeader>-->
+
+            <process ref="myProcessor" />
+
+            <choice>
+                <when>
+                    <!--<simple>${header.CamelHttpMethod} == 'GET'</simple>-->
+                    <simple>${header.CamelHttpQuery} == 'a=1'</simple>
+                    <log message="******to call http://localhost:7888" loggingLevel="INFO" />
+                    <to uri="restlet:http://localhost:7888/be/myservice?socketTimeout=30000&amp;connectionTimeout=30000" />
+                </when>
+                <otherwise>
+
+                    <!-- use localhost http or https-->
+                    <choice>
+                        <when>
+                            <simple>${header.CamelHttpQuery} == 'a=2'</simple>
+                            <log message="******to call http://localhost:9080" loggingLevel="INFO" />
+                            <to uri="restlet:http://localhost:9080/docs/RELEASE-NOTES.txt?socketTimeout=30000&amp;connectionTimeout=30000" />
+                        </when>
+                        <otherwise>
+                            <to uri="restlet:https://dell:8443/myserver/be/myservice?restletMethod=POST&amp;socketTimeout=30000&amp;connectionTimeout=30000"/>
+                        </otherwise>
+                    </choice>
+                    <!-- use localhost http or https-->
+
+                </otherwise>
+            </choice>
+
+            <!--<convertBodyTo type="String"/>-->
+
+            <log message="******End of route, headers: ${in.headers} ; ------body :${in.body}" loggingLevel="INFO" />
+        </route>
+
+
+
+
+        <route id="myservice.callBackend2">
+            <from uri="restlet:/callBE2?restletMethods=GET,POST"/>
+
+            <convertBodyTo type="String"/>
+
+            <removeHeaders pattern="org.restlet*"/>
+            <removeHeaders pattern="CamelRestlet*"/>
+            <removeHeaders pattern="breadcrumb*"/>
+            <log message="******Start of route. headers : ${in.headers} ; ------body :${in.body}" loggingLevel="INFO" />
+
+            <setHeader headerName="Content-Type">
+                <constant>application/json</constant>
+            </setHeader>
+            <setHeader headerName="CamelHttpQuery">
+                <constant>v1=1&amp;v2=2&amp;v3=3&amp;timeDelay=100</constant>
+            </setHeader>
+
+            <!--<removeHeaders pattern="CamelHttpUri"/>-->
+            <!--<removeHeaders pattern="*" excludePattern="CamelHttpQuery" />-->
+            <!--<setHeader headerName="CamelHttpMethod">-->
+                <!--<constant>GET</constant>-->
+            <!--</setHeader>-->
+
+
+            <log message="======to invoke https , headers : ${headers}" />
+
+            <to uri="restlet:https://dell:8443/myserver/be/myservice?socketTimeout=30000"/>
+            <!--<to uri="restlet:https://dell:8443/myserver/be/myservice?bridgeEndpoint=true&amp;socketTimeout=30000&amp;connectionTimeout=30000"/>-->
+            <!--to uri="https://dell:8443/myserver/be/myservice?bridgeEndpoint=true&amp;httpClient.soTimeout=3000&amp;httpClient.connectionManagerTimeout=2" /-->
+            <!--<to uri="restlet:https://github.com:443?bridgeEndpoint=true" />-->
+
+
+            <!--<convertBodyTo type="String"/>-->
+
+            <log message="******End of route, headers: ${in.headers}  ;" loggingLevel="INFO" />
+            <log message="******End of route, body: ${body}  ;" loggingLevel="INFO" />
+        </route>
+
+        <!--call localhost mule helloworld flow-->
+        <route id="myservice.callMuleHw">
+            <from uri="restlet:/callMule?restletMethods=GET,POST"/>
+
+            <convertBodyTo type="String"/>
+
+            <removeHeaders pattern="org.restlet*"/>
+            <removeHeaders pattern="CamelRestlet*"/>
+            <removeHeaders pattern="breadcrumb*"/>
+            <log message="******Start of route. headers : ${in.headers} ; ------body :${in.body}" loggingLevel="INFO" />
+
+            <setHeader headerName="Content-Type">
+                <constant>application/json</constant>
+            </setHeader>
+
+            <log message="======to invoke mule , headers : ${headers}" />
+
+            <to uri="restlet:http://localhost:9086?restletMethod=POST" />
+
+
+            <convertBodyTo type="String"/>
+
+            <log message="******End of route, headers: ${in.headers}  ;" loggingLevel="INFO" />
+            <log message="******End of route, body: ${body}  ;" loggingLevel="INFO" />
+        </route>
+
+
+    </camelContext>
+
+</beans>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/spring"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+    <!--this show
+    <to uri="https://xxx" />
+    -->
+
+    <camelContext id="com.backbase.portal.integration.service.note2"  xmlns="http://camel.apache.org/schema/spring">
+
+        <route id="myservice.callBackend21">
+            <from uri="restlet:/callBE21?restletMethods=GET,POST"/>
+
+            <convertBodyTo type="String"/>
+
+            <removeHeaders pattern="*" excludePattern="CamelHttp*"/>
+            <log message="******callBE21.Start of route. headers : ${in.headers} ; ------body :${in.body}" loggingLevel="INFO" />
+            <setHeader headerName="Content-Type">
+                <constant>application/json</constant>
+            </setHeader>
+
+
+            <choice>
+                <when>
+                    <simple>${header.CamelHttpQuery} == 'a=1'</simple>
+                    <log message="******to call http://localhost:7888" loggingLevel="INFO" />
+                    <to uri="restlet:http://localhost:7888/be/myservice?socketTimeout=30000&amp;connectionTimeout=30000" />
+                </when>
+                <otherwise>
+
+                    <!-- use localhost http or https-->
+                    <choice>
+                        <when>
+                            <simple>${header.CamelHttpQuery} == 'a=2'</simple>
+                            <log message="******to call http://localhost:9080" loggingLevel="INFO" />
+                            <to uri="restlet:http://localhost:9080/docs/RELEASE-NOTES.txt?socketTimeout=30000&amp;connectionTimeout=30000" />
+                        </when>
+                        <otherwise>
+                            <log message="******to call https://dell:8443" loggingLevel="INFO" />
+                            <to uri="restlet:https://dell:8443/myserver/be/myservice?restletMethod=POST&amp;socketTimeout=30000&amp;connectionTimeout=30000"/>
+                        </otherwise>
+                    </choice>
+                    <!-- use localhost http or https .  end-->
+
+                </otherwise>
+            </choice>
+
+            <!--<convertBodyTo type="String"/>-->
+
+            <log message="******callBE21 .End of route, headers: ${in.headers} ; ------body :${in.body}" loggingLevel="INFO" />
+        </route>
+
+
+
+
+        <route id="myservice.callBackend22">
+            <from uri="restlet:/callBE22?restletMethods=GET,POST"/>
+
+            <convertBodyTo type="String"/>
+            <removeHeaders pattern="*" excludePattern="CamelHttp*"/>
+            <log message="******callBE22. Start of route. headers : ${in.headers} ; ------body :${in.body}" loggingLevel="INFO" />
+
+            <setHeader headerName="Content-Type">
+                <constant>application/json</constant>
+            </setHeader>
+            <setHeader headerName="CamelHttpQuery">
+                <constant>v1=1&amp;v2=2&amp;v3=3&amp;timeDelay=100</constant>
+            </setHeader>
+
+            <log message="======to invoke https , headers : ${headers}" />
+
+            <to uri="restlet:https://dell:8443/myserver/be/myservice?socketTimeout=30000"/>
+            <!--<to uri="https4://dell:8443/myserver/be/myservice?bridgeEndpoint=true&amp;httpClient.soTimeout=3000&amp;httpClient.connectionManagerTimeout=20" />-->
+
+            <convertBodyTo type="String"/>
+
+            <log message="******callBE22 .End of route, headers: ${in.headers}  ;" loggingLevel="INFO" />
+            <log message="******callBE22 .End of route, body: ${body}  ;" loggingLevel="INFO" />
+        </route>
+
+
+
+    </camelContext>
+
+</beans>

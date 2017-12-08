@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/spring"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring
+       http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+    <!--this is to show how to use camel-servlet
+    -->
+
+    <bean id="myServletProcessor" class="com.hdp.camel.processor.MyServletProcessor" > </bean>
+
+    <camelContext id="com.backbase.portal.integration.service.camelServletDemo"  xmlns="http://camel.apache.org/schema/spring">
+
+        <route id="myService.servletDemo">
+            <from uri="servlet:/testServlet?servletName=CamelServlet"/>
+
+            <convertBodyTo type="String"/>
+            <removeHeaders pattern="*" excludePattern="CamelHttp*"/>
+            <log message="******myService.servletDemo.Start of route. headers : ${in.headers} ; ------body :${in.body}" loggingLevel="INFO" />
+            <setHeader headerName="Content-Type">
+                <constant>application/json</constant>
+            </setHeader>
+
+            <process ref="myServletProcessor" />
+
+
+            <convertBodyTo type="String"/>
+            <log message="******myService.servletDemo .End of route, headers: ${in.headers} ; ------body :${in.body}" loggingLevel="INFO" />
+        </route>
+
+
+
+    </camelContext>
+
+</beans>
